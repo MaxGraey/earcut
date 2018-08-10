@@ -2,7 +2,10 @@
 #![feature(iterator_flatten)]
 #![feature(test)]
 #![feature(exact_chunks)]
-#![feature(proc_macro, wasm_custom_section, wasm_import_module)]
+#![feature(wasm_custom_section, wasm_import_module, use_extern_macros)]
+
+extern crate wasm_bindgen;
+use wasm_bindgen::prelude::*;
 
 extern crate typed_arena;
 extern crate itertools;
@@ -17,7 +20,7 @@ pub struct Point(f64, f64);
 
 impl Point {
     fn min(self, p: Point) -> Point {
-        Point(f64::min(self.0, p.0), 
+        Point(f64::min(self.0, p.0),
               f64::min(self.1, p.1))
     }
 
@@ -480,7 +483,7 @@ fn split_earcut<'a>(start: &'a Node<'a>,
 }
 
 // find a bridge between vertices that connects hole with an outer ring and and link it
-fn eliminate_hole<'a>(hole: &'a Node<'a>, 
+fn eliminate_hole<'a>(hole: &'a Node<'a>,
                       outer_node: &'a Node<'a>,
                       arena: &'a Arena<Node<'a>>) {
     if let Some(outer_node) = find_hole_bridge(hole, outer_node) {
@@ -701,9 +704,9 @@ fn area(p: Point, q: Point, r: Point) -> f64 {
 
 // check if two segments intersect
 fn intersects(p1: Point, q1: Point, p2: Point, q2: Point) -> bool {
-    (p1 == q1 && p2 == q2) || 
+    (p1 == q1 && p2 == q2) ||
     (p1 == q2 && p2 == q1) ||
-    ((area(p1, q1, p2) > 0.) != (area(p1, q1, q2) > 0.) && 
+    ((area(p1, q1, p2) > 0.) != (area(p1, q1, q2) > 0.) &&
      (area(p2, q2, p1) > 0.) != (area(p2, q2, q1) > 0.))
 }
 
@@ -752,9 +755,6 @@ fn middle_inside<'a>(a: &'a Node<'a>, b: &'a Node<'a>) -> bool {
     inside
 }
 
-extern crate wasm_bindgen;
-use wasm_bindgen::prelude::*;
-
 #[wasm_bindgen]
 pub fn earcut_flat(vertices: &[f64], holes: &[u32]) -> Vec<u32> {
     use itertools::Itertools;
@@ -799,12 +799,12 @@ mod tests {
     fn triangles_area(polygon: &Vec<Vec<Point>>, indices: &Vec<u32>) -> f64 {
         let flattened = polygon.iter().flatten().collect::<Vec<&Point>>();
         indices.exact_chunks(3)
-            .map(|tri| f64::abs(area(*flattened[tri[0] as usize], 
-                                     *flattened[tri[1] as usize], 
+            .map(|tri| f64::abs(area(*flattened[tri[0] as usize],
+                                     *flattened[tri[1] as usize],
                                      *flattened[tri[2] as usize])) / 2.)
             .sum()
     }
-    
+
     fn load(file: &str) -> Vec<Vec<Point>> {
         let mut path = env::current_dir().unwrap();
         path.push("test");
@@ -877,7 +877,7 @@ mod tests {
                 holes.push(hole_index);
             }
         }
-        
+
         println!("{:?}", data);
         println!("{:?}", vertices);
         println!("{:?}", holes);
