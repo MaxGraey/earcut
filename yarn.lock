@@ -13,6 +13,10 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.0.tgz#50c1e2260ac0ed9439a181de3725a0168d59c48a"
 
+"@protobufjs/utf8@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
+
 "@samverschueren/stream-to-observable@^0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@samverschueren/stream-to-observable/-/stream-to-observable-0.3.0.tgz#ecdf48d532c58ea477acfcab80348424f8d0662f"
@@ -402,6 +406,15 @@ asn1.js@^4.0.0:
 asn1@~0.2.3:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/asn1/-/asn1-0.2.3.tgz#dac8787713c9966849fc8180777ebe9c1ddf3b86"
+
+"assemblyscript@github:AssemblyScript/assemblyscript#c769f65bacd5392e5c9efab112b33244fc0a0c8f":
+  version "0.5.0"
+  resolved "https://codeload.github.com/AssemblyScript/assemblyscript/tar.gz/c769f65bacd5392e5c9efab112b33244fc0a0c8f"
+  dependencies:
+    "@protobufjs/utf8" "^1.1.0"
+    binaryen "49.0.0-nightly.20180731"
+    glob "^7.1.2"
+    long "^4.0.0"
 
 assert-plus@1.0.0, assert-plus@^1.0.0:
   version "1.0.0"
@@ -1087,6 +1100,10 @@ big.js@^3.1.3:
 binary-extensions@^1.0.0:
   version "1.11.0"
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.11.0.tgz#46aa1751fb6a2f93ee5e689bb1087d4b14c6c205"
+
+binaryen@49.0.0-nightly.20180731:
+  version "49.0.0-nightly.20180731"
+  resolved "https://registry.yarnpkg.com/binaryen/-/binaryen-49.0.0-nightly.20180731.tgz#d57a3ceeca56673377951aee1c229ad2c203023d"
 
 binaryextensions@2:
   version "2.1.1"
@@ -3995,6 +4012,10 @@ loglevelnext@^1.0.1:
 long@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/long/-/long-3.2.0.tgz#d821b7138ca1cb581c172990ef14db200b5c474b"
+
+long@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/long/-/long-4.0.0.tgz#9a7b71cfb7d361a194ea555241c92f7468d5bf28"
 
 longest@^1.0.1:
   version "1.0.1"
