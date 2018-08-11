@@ -339,9 +339,10 @@ function findHoleBridge(hole, outerNode) {
     p = m.next;
 
     while (p !== stop) {
-        if (hx >= p.x && p.x >= mx && hx !== p.x &&
-                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-
+        if (
+            hx >= p.x && p.x >= mx && hx !== p.x &&
+            pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)
+        ) {
             tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
 
             if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
