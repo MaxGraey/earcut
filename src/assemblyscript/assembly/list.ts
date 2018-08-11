@@ -13,9 +13,14 @@ export class Node implements IPoint {
     public x:     f64, // vertex coordinate "x"
     public y:     f64, // vertex coordinate "y"
   ) {}
+
+  @inline @operator('==')
+  equals(other: Node): bool {
+    return this === other || (this.x == other.x && this.y == other.y);
+  }
 }
 
-
+@inline
 export function insertNode(index: i32, x: f64, y: f64, last: bool = false): Node {
   var node = new Node(index, x, y);
   if (!last) {
@@ -30,6 +35,7 @@ export function insertNode(index: i32, x: f64, y: f64, last: bool = false): Node
   return node;
 }
 
+@inline
 export function removeNode(node: Node): void {
   var prevZ = node.prevZ;
   var nextZ = node.nextZ;

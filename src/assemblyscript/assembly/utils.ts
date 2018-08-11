@@ -1,6 +1,6 @@
 
-import { Node, sortLinked }  from './list';
-import { Point } from './point';
+import { Node, removeNode, sortLinked }  from './list';
+// import { Point } from './point';
 
 @inline // z-order of a point given coords and inverse of the longer side of data bbox
 export function zOrder32(px: f64, py: f64, minX: f64, minY: f64, invSize: f64): u32 {
@@ -29,15 +29,25 @@ export function pointInTriangle(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy:
 }
 
 @inline // signed area of a triangle
-export function area(p: Point, q: Point, r: Point): f64 {
+export function area(p: Node, q: Node, r: Node): f64 {
   return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 }
 
+@inline
+export function signedArea(data: f64[], start: i32, end: i32, dim: i32): f64 {
+  var sum = 0.0;
+  for (let i = start, j = end - dim; i < end; i += dim) {
+    sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+    j = i;
+  }
+  return sum;
+}
+
 @inline // check if two segments intersect
-export function intersects(p1: Point, q1: Point, p2: Point, q2: Point): bool {
+export function intersects(p1: Node, q1: Node, p2: Node, q2: Node): bool {
   if ((p1 == q1 && p2 == q2) || (p1 == q2 && p2 == q1)) return true;
-  return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
-         area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+  return area(p1, q1, p2) > 0 != area(p1, q1, q2) > 0 &&
+         area(p2, q2, p1) > 0 != area(p2, q2, q1) > 0;
 }
 
 @inline // check if a polygon diagonal is locally inside the polygon
@@ -69,7 +79,7 @@ export function middleInside(a: Node, b: Node): bool {
       inside = !inside;
     }
     p = nextP;
-  } while (p != a);
+  } while (p !== a);
 
   return inside;
 }
@@ -89,7 +99,7 @@ export function intersectsPolygon(a: Node, b: Node): bool {
       intersects(p, nextP, a, b)
     ) return true;
     p = nextP;
-  } while (p != a);
+  } while (p !== a);
 
   return false;
 }
@@ -98,8 +108,8 @@ export function intersectsPolygon(a: Node, b: Node): bool {
 export function isValidDiagonal(a: Node, b: Node): bool {
   var indexB = b.index;
   return (
-    a.next.index !== indexB &&
-    a.prev.index !== indexB &&
+    a.next.index != indexB &&
+    a.prev.index != indexB &&
     !intersectsPolygon(a, b) &&
     locallyInside(a, b) &&
     locallyInside(b, a) &&
@@ -137,7 +147,7 @@ export function getLeftmost(start: Node): Node {
   do {
     if (p.x < leftmost.x) leftmost = p;
     p = p.next;
-  } while (p != start);
+  } while (p !== start);
   return leftmost;
 }
 
@@ -149,7 +159,7 @@ export function indexCurve(start: Node, minX: f64, minY: f64, invSize: f64): voi
     p.prevZ = p.prev;
     p.nextZ = p.next;
     p       = p.next;
-  } while (p != start);
+  } while (p !== start);
 
   p.prevZ.nextZ = null;
   p.prevZ       = null;
@@ -202,14 +212,14 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
   // look for points inside the triangle in both directions
   while (p && p.z >= minZ && n && n.z <= maxZ) {
     if (
-      p != ear.prev && p != ear.next &&
+      p !== ear.prev && p !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
       area(p.prev, p, p.next) >= 0
     ) return false;
     p = p.prevZ;
 
     if (
-      n != ear.prev && n != ear.next &&
+      n !== ear.prev && n !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
       area(n.prev, n, n.next) >= 0
     ) return false;
@@ -219,7 +229,7 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
   // look for remaining points in decreasing z-order
   while (p && p.z >= minZ) {
     if (
-      p != ear.prev && p != ear.next &&
+      p !== ear.prev && p !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
       area(p.prev, p, p.next) >= 0
     ) return false;
@@ -229,7 +239,7 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
   // look for remaining points in increasing z-order
   while (n && n.z <= maxZ) {
     if (
-      n != ear.prev && n != ear.next &&
+      n !== ear.prev && n !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
       area(n.prev, n, n.next) >= 0
     ) return false;
@@ -237,4 +247,25 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
   }
 
   return true;
+}
+
+// eliminate colinear or duplicate points
+export function filterPoints(start: Node, end: Node): Node {
+  if (!start) return start;
+  if (!end)   end = start;
+
+  var p = start, again = false;
+  do {
+    again = false;
+
+    if (!p.steiner && ((p == p.next) || area(p.prev, p, p.next) == 0.0)) {
+      removeNode(p);
+      p = end = p.prev;
+      if (p === p.next) break;
+      again = true;
+    } else {
+      p = p.next;
+    }
+  } while (again || p !== end);
+  return end;
 }
