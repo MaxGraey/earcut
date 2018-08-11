@@ -18,6 +18,11 @@ export class Node implements IPoint {
   equals(other: Node): bool {
     return this === other || (this.x == other.x && this.y == other.y);
   }
+
+  @inline @operator('!=')
+  notEquals(other: Node): bool {
+    return !this.equals(other);
+  }
 }
 
 @inline

@@ -250,7 +250,7 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
 }
 
 // eliminate colinear or duplicate points
-export function filterPoints(start: Node, end: Node): Node {
+export function filterPoints(start: Node, end: Node | null = null): Node {
   if (!start) return start;
   if (!end)   end = start;
 

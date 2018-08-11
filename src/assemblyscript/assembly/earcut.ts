@@ -4,16 +4,21 @@ import {
   isEar,
   isEarHashed,
   getLeftmost,
+  indexCurve,
   signedArea,
+  intersects,
+  pointInTriangle,
+  locallyInside,
+  isValidDiagonal,
   splitPolygon,
   filterPoints,
 } from './utils';
 
-export function earcut(data: f64[], holeIndices: i32[], dim: i32 = 2) {
+export function earcut(data: f64[], holeIndices: i32[], dim: i32 = 2): i32[] {
   var hasHoles  = holeIndices && holeIndices.length,
       outerLen  = hasHoles ? holeIndices[0] * dim : data.length,
       outerNode = linkedList(data, 0, outerLen, dim, true),
-      triangles = [];
+      triangles: i32[] = [];
 
   if (!outerNode) return triangles;
 
@@ -41,7 +46,7 @@ export function earcut(data: f64[], holeIndices: i32[], dim: i32 = 2) {
     invSize = Math.max(maxX - minX, maxY - minY);
     invSize = invSize != 0 ? 1.0 / invSize : 0.0;
   }
-  // earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
+  earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
   return triangles;
 }
 
@@ -70,16 +75,19 @@ function linkedList(data: f64[], start: i32, end: i32, dim: i32, clockwise: bool
 
 // link every hole into the outer loop, producing a single-ring polygon without holes
 function eliminateHoles(data: f64[], holeIndices: i32[], outerNode: Node, dim: i32 = 2): Node {
-  var queue = new Array<Node>(32), start: i32, end: i32, list: Node;
+  var holeLength = holeIndices.length;
   var dataLength = data.length;
+  var queue      = new Array<Node>(holeLength);
 
-  for (let i = 0, len = holeIndices.length; i < len; ++i) {
+  var start: i32, end: i32, list: Node;
+
+  for (let i = 0; i < holeLength; ++i) {
     start = holeIndices[i] * dim;
-    end   = i < len - 1 ? holeIndices[i + 1] * dim : dataLength;
+    end   = i < holeLength - 1 ? holeIndices[i + 1] * dim : dataLength;
     list  = linkedList(data, start, end, dim);
 
     if (list === list.next) list.steiner = true;
-    queue.push(getLeftmost(list));
+    queue[i] = getLeftmost(list);
   }
 
   // TODO need TimSort implementation
@@ -90,7 +98,7 @@ function eliminateHoles(data: f64[], holeIndices: i32[], outerNode: Node, dim: i
   });
 
   // process holes from left to right
-  for (let i = 0, len = queue.length; i < len; ++i) {
+  for (let i = 0; i < holeLength; ++i) {
     eliminateHole(queue[i], outerNode);
     outerNode = filterPoints(outerNode, outerNode.next);
   }
@@ -108,8 +116,174 @@ function eliminateHole(hole: Node, outerNode: Node): void {
   }
 }
 
-function findHoleBridge(hole: Node, outerNode: Node): Node {
-  // TODO
-  return null;
-  //
+// David Eberly's algorithm for finding a bridge between hole and outer polygon
+function findHoleBridge(hole: Node, outerNode: Node): Node | null {
+  var p  = outerNode,
+      hx = hole.x,
+      hy = hole.y,
+      qx =-Infinity,
+      m: Node | null = null;
+
+  // find a segment intersected by a ray from the hole's leftmost point to the left;
+  // segment's endpoint with lesser x will be potential connection point
+  do {
+    if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+      let x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+      if (x <= hx && x > qx) {
+        qx = x;
+        if (x == hx) {
+          if (hy == p.y)      return p;
+          if (hy == p.next.y) return p.next;
+        }
+        m = p.x < p.next.x ? p : p.next;
+      }
+    }
+    p = p.next;
+  } while (p !== outerNode);
+
+  if (!m) return null;
+
+  if (hx == qx) return m.prev; // hole touches outer segment; pick lower endpoint
+
+  // look for points inside the triangle of hole point, segment intersection and endpoint;
+  // if there are no points found, we have a valid connection;
+  // otherwise choose the point of the minimum angle with the ray as connection point
+
+  var stop   = m,
+      mx     = m.x,
+      my     = m.y,
+      tanMin = Infinity,
+      tan    = 0.0;
+
+  p = m.next;
+  while (p !== stop) {
+    if (
+      hx >= p.x && p.x >= mx && hx != p.x &&
+      pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)
+    ) {
+      tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+      if ((tan < tanMin || (tan == tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+        m = p;
+        tanMin = tan;
+      }
+    }
+
+    p = p.next;
+  }
+
+  return m;
+}
+
+// go through all polygon nodes and cure small local self-intersections
+function cureLocalIntersections(start: Node, triangles: i32[], dim: i32): Node {
+  var p = start;
+  do {
+    let a = p.prev;
+    let n = p.next;
+    let b = p.next.next;
+
+    if (
+      a != b &&
+      intersects(a, p, n, b) &&
+      locallyInside(a, b) &&
+      locallyInside(b, a)
+    ) {
+
+      triangles.push(a.index / dim);
+      triangles.push(p.index / dim);
+      triangles.push(b.index / dim);
+
+      // remove two nodes involved
+      removeNode(p);
+      removeNode(n);
+
+      p = start = b;
+    }
+    p = p.next;
+  } while (p !== start);
+
+  return p;
+}
+
+// try splitting polygon into two and triangulate them independently
+function splitEarcut(start: Node, triangles: i32[], dim: i32, minX: f64, minY: f64, invSize: f64): void {
+  // look for a valid diagonal that divides the polygon into two
+  var a = start;
+  do {
+    let b = a.next.next;
+    while (b !== a.prev) {
+      if (a.index !== b.index && isValidDiagonal(a, b)) {
+        // split the polygon in two by the diagonal
+        let c = splitPolygon(a, b);
+
+        // filter colinear points around the cuts
+        a = filterPoints(a, a.next);
+        c = filterPoints(c, c.next);
+
+        // run earcut on each half
+        earcutLinked(a, triangles, dim, minX, minY, invSize);
+        earcutLinked(c, triangles, dim, minX, minY, invSize);
+        return;
+      }
+      b = b.next;
+    }
+    a = a.next;
+  } while (a !== start);
+}
+
+// main ear slicing loop which triangulates a polygon (given as a linked list)
+function earcutLinked(ear: Node, triangles: i32[], dim: i32, minX: f64, minY: f64, invSize: f64, pass: i32 = 0): void {
+  if (!ear) return;
+
+  // interlink polygon nodes in z-order
+  if (!pass && invSize) {
+    indexCurve(ear, minX, minY, invSize);
+  }
+
+  var stop = ear, prev: Node, next: Node;
+
+  // iterate through ears, slicing them one by one
+  while (ear.prev !== ear.next) {
+    prev = ear.prev;
+    next = ear.next;
+
+    if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+      // cut off the triangle
+      triangles.push(prev.index / dim);
+      triangles.push(ear.index  / dim);
+      triangles.push(next.index / dim);
+
+      removeNode(ear);
+
+      // skipping the next vertex leads to less sliver triangles
+      ear = stop = next.next;
+      continue;
+    }
+
+    ear = next;
+
+    // if we looped through the whole remaining polygon and can't find any more ears
+    if (ear === stop) {
+      switch (pass) {
+        // try filtering points and slicing again
+        case 0: {
+          earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+          break;
+        }
+        // if this didn't work, try curing all small self-intersections locally
+        case 1: {
+          ear = cureLocalIntersections(ear, triangles, dim);
+          earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+          break;
+        }
+        // as a last resort, try splitting the remaining polygon into two
+        case 2: {
+          splitEarcut(ear, triangles, dim, minX, minY, invSize);
+          break;
+        }
+      }
+
+      break;
+    }
+  }
 }
