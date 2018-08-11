@@ -290,7 +290,7 @@ export function deviation(data: f64[], holeIndices: i32[], dim: i32, triangles: 
     }
   }
 
-  var trianglesArea = 0;
+  var trianglesArea = 0.0;
   for (let i = 0, len = triangles.length; i < len; i += 3) {
     let a = triangles[i + 0] * dim;
     let b = triangles[i + 1] * dim;
@@ -306,8 +306,7 @@ export function deviation(data: f64[], holeIndices: i32[], dim: i32, triangles: 
   }
 
   return (
-    polygonArea == 0.0 && trianglesArea == 0.0 ?
-    0.0 :
+    polygonArea == 0.0 && trianglesArea == 0.0 ? 0.0 :
     Math.abs((trianglesArea - polygonArea) / polygonArea)
   );
 }
