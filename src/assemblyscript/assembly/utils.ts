@@ -2,6 +2,12 @@
 import { Node, removeNode, sortLinked }  from './list';
 // import { Point } from './point';
 
+class FlattenResult {
+  vertices:   f64[]
+  holes:      i32[]
+  dimensions: i32
+}
+
 @inline // z-order of a point given coords and inverse of the longer side of data bbox
 export function zOrder32(px: f64, py: f64, minX: f64, minY: f64, invSize: f64): u32 {
   // coords are transformed into non-negative 15-bit integer range
@@ -268,4 +274,64 @@ export function filterPoints(start: Node, end: Node | null = null): Node {
     }
   } while (again || p !== end);
   return end;
+}
+
+export function deviation(data: f64[], holeIndices: i32[], dim: i32, triangles: i32[]): f64 {
+  var hasHoles = holeIndices !== null && holeIndices.length;
+  var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+
+  var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+  if (hasHoles) {
+    for (let i = 0, len = holeIndices.length; i < len; ++i) {
+      let start = holeIndices[i] * dim;
+      let end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+      polygonArea -= Math.abs(signedArea(data, start, end, dim));
+    }
+  }
+
+  var trianglesArea = 0;
+  for (let i = 0, len = triangles.length; i < len; i += 3) {
+    let a = triangles[i + 0] * dim;
+    let b = triangles[i + 1] * dim;
+    let c = triangles[i + 2] * dim;
+
+    let a0 = data[a + 0];
+    let a1 = data[a + 1];
+
+    trianglesArea += Math.abs(
+      (a0 - data[c]) * (data[b + 1] - a1) -
+      (a0 - data[b]) * (data[c + 1] - a1)
+    );
+  }
+
+  return (
+    polygonArea == 0.0 && trianglesArea == 0.0 ?
+    0.0 :
+    Math.abs((trianglesArea - polygonArea) / polygonArea)
+  );
+}
+
+// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+export function flatten(data: Array<f64[]>) {
+  var vertices: f64[] = [];
+  var holes:    i32[] = [];
+  var dimensions = data[0][0].length;
+
+  var result    = { vertices, holes, dimensions } as FlattenResult;
+  var holeIndex = 0;
+
+  for (let i = 0, ilen = data.length; i < ilen; ++i) {
+    let di = data[i];
+    for (let j = 0, jlen = di.length; j < jlen; ++j) {
+      let dij = di[j];
+      for (let d = 0; d < dimensions; ++d) {
+        vertices.push(dij[d]);
+      }
+    }
+    if (i > 0) {
+      holeIndex += data[i - 1].length;
+      holes.push(holeIndex);
+    }
+  }
+  return result;
 }
