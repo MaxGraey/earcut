@@ -1,6 +1,5 @@
-import { IPoint } from './point';
 
-export class Node implements IPoint {
+export class Node {
   prev:    Node | null = null  // previous vertex nodes in a polygon ring
   next:    Node | null = null  // next vertex nodes in a polygon ring
   prevZ:   Node | null = null  // previous nodes in z-order
@@ -15,24 +14,24 @@ export class Node implements IPoint {
   ) {}
 
   @inline @operator('==')
-  equals(other: Node): bool {
+  equals(other: Node | null): bool {
     return this === other || (this.x == other.x && this.y == other.y);
   }
 
   @inline @operator('!=')
-  notEquals(other: Node): bool {
+  notEquals(other: Node | null): bool {
     return !this.equals(other);
   }
 }
 
 @inline
-export function insertNode(index: i32, x: f64, y: f64, last: bool = false): Node {
+export function insertNode(index: i32, x: f64, y: f64, last: Node | null = null): Node {
   var node = new Node(index, x, y);
   if (!last) {
     node.prev = node;
     node.next = node;
   } else {
-    node.next = last.next;
+    node.next = <Node>last.next;
     node.prev = last;
     last.next.prev = node;
     last.next      = node;
@@ -54,8 +53,8 @@ export function removeNode(node: Node): void {
 
 // Simon Tatham's linked list merge sort algorithm
 // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-export function sortLinked(list: Node): void {
-  var p: Node, q: Node, e: Node, tail: Node;
+export function sortLinked(list: Node | null): void {
+  var p: Node | null, q: Node | null, e: Node | null, tail: Node | null;
   var numMerges: i32, pSize: i32, qSize: i32;
   var inSize = 1;
 
@@ -65,7 +64,7 @@ export function sortLinked(list: Node): void {
     tail = null;
     numMerges = 0;
 
-    while (p) {
+    while (p !== null) {
       ++numMerges;
       q = p;
       pSize = 0;
@@ -76,7 +75,7 @@ export function sortLinked(list: Node): void {
       }
       qSize = inSize;
 
-      while (pSize > 0 || (q && qSize > 0)) {
+      while (pSize > 0 || (q !== null && qSize > 0)) {
         if (pSize && (!qSize || !q || p.z <= q.z)) {
           e = p;
           p = p.nextZ;

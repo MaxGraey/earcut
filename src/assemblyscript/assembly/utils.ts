@@ -57,9 +57,9 @@ export function intersects(p1: Node, q1: Node, p2: Node, q2: Node): bool {
 }
 
 @inline // check if a polygon diagonal is locally inside the polygon
-export function locallyInside(a: Node, b: Node) {
-  var ap = a.prev;
-  var an = a.next;
+export function locallyInside(a: Node, b: Node): bool {
+  var ap = <Node>a.prev;
+  var an = <Node>a.next;
   return area(ap, a, an) < 0 ?
       area(a, b, an) >= 0 && area(a, ap, b) >= 0 :
       area(a, b, ap) <  0 || area(a, an, b) <  0;
@@ -72,7 +72,7 @@ export function middleInside(a: Node, b: Node): bool {
       cx = (a.x + b.x) * 0.5,
       cy = (a.y + b.y) * 0.5;
   do {
-    let nextP = p.next;
+    let nextP = <Node>p.next;
 
     let px  = p.x;
     let py  = p.y;
@@ -96,7 +96,7 @@ export function intersectsPolygon(a: Node, b: Node): bool {
   var indexA = a.index;
   var indexB = b.index;
   do {
-    let nextP     = p.next;
+    let nextP     = <Node>p.next;
     let currIndex = p.index;
     let nextIndex = nextP.index;
     if (
@@ -152,14 +152,14 @@ export function getLeftmost(start: Node): Node {
   var p = start, leftmost = start;
   do {
     if (p.x < leftmost.x) leftmost = p;
-    p = p.next;
+    p = <Node>p.next;
   } while (p !== start);
   return leftmost;
 }
 
 @inline // interlink polygon nodes in z-order
 export function indexCurve(start: Node, minX: f64, minY: f64, invSize: f64): void {
-  var p = start;
+  var p: Node | null = start;
   do {
     if (!p.z) p.z = zOrder32(p.x, p.y, minX, minY, invSize);
     p.prevZ = p.prev;
@@ -175,9 +175,9 @@ export function indexCurve(start: Node, minX: f64, minY: f64, invSize: f64): voi
 
 // check whether a polygon node forms a valid ear with adjacent nodes
 export function isEar(ear: Node): bool {
-  var a = ear.prev,
+  var a = <Node>ear.prev,
       b = ear,
-      c = ear.next;
+      c = <Node>ear.next;
 
   if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
@@ -186,7 +186,7 @@ export function isEar(ear: Node): bool {
   while (p != ear.prev) {
     if (
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-      area(p.prev, p, p.next) >= 0
+      area(<Node>p.prev, <Node>p, <Node>p.next) >= 0
     ) return false;
     p = p.next;
   }
@@ -196,9 +196,9 @@ export function isEar(ear: Node): bool {
 
 
 export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool {
-  var a = ear.prev,
+  var a = <Node>ear.prev,
       b = ear,
-      c = ear.next;
+      c = <Node>ear.next;
 
   if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
@@ -217,38 +217,38 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
       n = ear.nextZ;
 
   // look for points inside the triangle in both directions
-  while (p && p.z >= minZ && n && n.z <= maxZ) {
+  while (p !== null && p.z >= minZ && n !== null && n.z <= maxZ) {
     if (
       p !== ear.prev && p !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-      area(p.prev, p, p.next) >= 0
+      area(<Node>p.prev, <Node>p, <Node>p.next) >= 0
     ) return false;
     p = p.prevZ;
 
     if (
       n !== ear.prev && n !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-      area(n.prev, n, n.next) >= 0
+      area(<Node>n.prev, <Node>n, <Node>n.next) >= 0
     ) return false;
     n = n.nextZ;
   }
 
   // look for remaining points in decreasing z-order
-  while (p && p.z >= minZ) {
+  while (p !== null && p.z >= minZ) {
     if (
       p !== ear.prev && p !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-      area(p.prev, p, p.next) >= 0
+      area(<Node>p.prev, <Node>p, <Node>p.next) >= 0
     ) return false;
     p = p.prevZ;
   }
 
   // look for remaining points in increasing z-order
-  while (n && n.z <= maxZ) {
+  while (n !== null && n.z <= maxZ) {
     if (
       n !== ear.prev && n !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-      area(n.prev, n, n.next) >= 0
+      area(<Node>n.prev, <Node>n, <Node>n.next) >= 0
     ) return false;
     n = n.nextZ;
   }
@@ -259,22 +259,25 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
 // eliminate colinear or duplicate points
 export function filterPoints(start: Node, end: Node | null = null): Node {
   if (!start) return start;
-  if (!end)   end = start;
+  if (!end)   end = <Node>start;
 
   var p = start, again = false;
   do {
     again = false;
+    let pp = <Node>p.prev;
+    let pn = <Node>p.next;
 
-    if (!p.steiner && ((p == p.next) || area(p.prev, p, p.next) == 0.0)) {
+    if (!p.steiner && ((p == pn) || area(pp, p, pn) == 0.0)) {
       removeNode(p);
-      p = end = p.prev;
-      if (p === p.next) break;
+      p = <Node>pp;
+      end = pp;
+      if (p === pn) break;
       again = true;
     } else {
-      p = p.next;
+      p = pn;
     }
   } while (again || p !== end);
-  return end;
+  return end as Node;
 }
 
 export function deviation(data: f64[], holeIndices: i32[], dim: i32, triangles: i32[]): f64 {
