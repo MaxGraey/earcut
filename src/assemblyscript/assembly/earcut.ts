@@ -44,7 +44,7 @@ export function earcut(data: f64[], holeIndices: i32[], dim: i32 = 2): i32[] {
 
     // minX, minY and invSize are later used to transform coords into integers for z-order calculation
     invSize = Math.max(maxX - minX, maxY - minY);
-    invSize = invSize != 0 ? 1.0 / invSize : 0.0;
+    if (invSize != 0.0) invSize = 1.0 / invSize;
   }
   earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
   return triangles;
@@ -142,7 +142,6 @@ function findHoleBridge(hole: Node, outerNode: Node): Node | null {
   } while (p !== outerNode);
 
   if (!m) return null;
-
   if (hx == qx) return m.prev; // hole touches outer segment; pick lower endpoint
 
   // look for points inside the triangle of hole point, segment intersection and endpoint;
@@ -232,11 +231,11 @@ function splitEarcut(start: Node, triangles: i32[], dim: i32, minX: f64, minY: f
 }
 
 // main ear slicing loop which triangulates a polygon (given as a linked list)
-function earcutLinked(ear: Node, triangles: i32[], dim: i32, minX: f64, minY: f64, invSize: f64, pass: i32 = 0): void {
+function earcutLinked(ear: Node, triangles: i32[], dim: i32, minX: f64, minY: f64, invSize: f64 = 0.0, pass: i32 = 0): void {
   if (!ear) return;
 
   // interlink polygon nodes in z-order
-  if (!pass && invSize) {
+  if (!pass && invSize != 0.0) {
     indexCurve(ear, minX, minY, invSize);
   }
 
@@ -247,7 +246,7 @@ function earcutLinked(ear: Node, triangles: i32[], dim: i32, minX: f64, minY: f6
     prev = ear.prev;
     next = ear.next;
 
-    if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+    if (invSize != 0.0 ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
       // cut off the triangle
       triangles.push(prev.index / dim);
       triangles.push(ear.index  / dim);

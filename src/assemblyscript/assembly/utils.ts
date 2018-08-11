@@ -312,7 +312,7 @@ export function deviation(data: f64[], holeIndices: i32[], dim: i32, triangles: 
 }
 
 // turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-export function flatten(data: Array<f64[]>) {
+export function flatten(data: Array<f64[]>): FlattenResult {
   var vertices: f64[] = [];
   var holes:    i32[] = [];
   var dimensions = data[0][0].length;
@@ -320,7 +320,7 @@ export function flatten(data: Array<f64[]>) {
   var result    = { vertices, holes, dimensions } as FlattenResult;
   var holeIndex = 0;
 
-  for (let i = 0, ilen = data.length; i < ilen; ++i) {
+  for (var i = 0, ilen = data.length; i < ilen; ++i) {
     let di = data[i];
     for (let j = 0, jlen = di.length; j < jlen; ++j) {
       let dij = di[j];
