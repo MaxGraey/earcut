@@ -202,6 +202,7 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
 
   if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
+  // TODO optimize this
   // triangle bbox; min & max are calculated like this for speed
   var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
       minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),

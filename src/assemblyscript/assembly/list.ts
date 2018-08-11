@@ -55,7 +55,9 @@ export function removeNode(node: Node): void {
 // Simon Tatham's linked list merge sort algorithm
 // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
 export function sortLinked(list: Node): void {
-  var i, p, q, e, tail, numMerges, pSize, qSize, inSize = 1;
+  var p: Node, q: Node, e: Node, tail: Node;
+  var numMerges: i32, pSize: i32, qSize: i32;
+  var inSize = 1;
 
   do {
     p    = list;
@@ -67,7 +69,7 @@ export function sortLinked(list: Node): void {
       ++numMerges;
       q = p;
       pSize = 0;
-      for (i = 0; i < inSize; ++i) {
+      for (let i = 0; i < inSize; ++i) {
         ++pSize;
         q = q.nextZ;
         if (!q) break;
