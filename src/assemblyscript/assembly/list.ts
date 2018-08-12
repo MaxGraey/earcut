@@ -55,8 +55,7 @@ export function removeNode(node: Node): void {
 // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
 export function sortLinked(list: Node | null): void {
   var p: Node | null, q: Node | null, e: Node | null, tail: Node | null;
-  var numMerges: i32, pSize: i32, qSize: i32;
-  var inSize = 1;
+  var numMerges: i32, pSize: i32, qSize: i32, inSize = 1;
 
   do {
     p    = list;
