@@ -1,6 +1,6 @@
 
 import { Node, removeNode, insertNode } from './list';
-import { Sorter } from './timsort';
+import { sort } from './timsort';
 import {
   isEar,
   isEarHashed,
@@ -93,8 +93,7 @@ function eliminateHoles(data: f64[], holeIndices: i32[], outerNode: Node, dim: i
     queue[i] = getLeftmost(list as Node);
   }
 
-  var sorter = new Sorter<Node>();
-  sorter.sort(queue, (a: Node, b: Node): i32 => {
+  sort<Node>(queue, (a: Node, b: Node): i32 => {
     var ax = a.x;
     var bx = b.x;
     return <i32>(ax > bx) - <i32>(ax < bx);
