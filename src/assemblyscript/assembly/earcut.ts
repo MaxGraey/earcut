@@ -54,7 +54,7 @@ export function earcutCore(data: f64[], holeIndices: i32[], dim: i32 = 2): i32[]
 }
 
 // create a circular doubly linked list from polygon points in the specified winding order
-function linkedList(data: f64[], start: i32, end: i32, dim: i32, clockwise: bool = false): Node | null {
+function linkedList(data: f64[], start: i32, end: i32, dim: i32, clockwise: bool = false): Node {
   var last: Node | null = null;
 
   if (clockwise == (signedArea(data, start, end, dim) > 0)) {
@@ -72,7 +72,7 @@ function linkedList(data: f64[], start: i32, end: i32, dim: i32, clockwise: bool
     last = last.next;
   }
 
-  return last;
+  return last as Node;
 }
 
 
@@ -87,7 +87,7 @@ function eliminateHoles(data: f64[], holeIndices: i32[], outerNode: Node, dim: i
   for (let i = 0; i < holeLength; ++i) {
     start = holeIndices[i] * dim;
     end   = i < holeLength - 1 ? holeIndices[i + 1] * dim : dataLength;
-    list  = linkedList(data, start, end, dim) as Node;
+    list  = linkedList(data, start, end, dim);
 
     if (list === list.next) list.steiner = true;
     queue[i] = getLeftmost(list as Node);

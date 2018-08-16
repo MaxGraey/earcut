@@ -1,3 +1,5 @@
+'use strict';
+
 const earcut = require('../src/earcut');
 
 function withoutHoles({vertices, holes, dimensions}) {
