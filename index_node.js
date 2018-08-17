@@ -4,22 +4,22 @@ const Benchmark = require('benchmark');
 
 const earcutJS       = require('./src/earcut');
 const earcutRustWasm = require('./earcut').earcut_flat;
-// const earcutAsWasm   = require('./src/assemblyscript').earcut;
+const earcutAsWasm   = require('./src/assemblyscript').earcutFlat;
 
 const building = earcutJS.flatten(require('./test/fixtures/building.json'));
 const dude     = earcutJS.flatten(require('./test/fixtures/dude.json'));
 const water    = earcutJS.flatten(require('./test/fixtures/water.json'));
 
-if (false) {
+
+if (true) {
     const {vertices, holes} = building;
 
-    const verticesArray   = Float64Array.from(vertices);
-    const holesArray      = Uint32Array.from(holes);
+    const verticesArray = Float64Array.from(vertices);
+    const holesArray    = Uint32Array.from(holes);
 
     const triangles = earcutAsWasm(verticesArray, holesArray);
     console.log(triangles);
-    return;
-}
+} else {
 
 const samples = {
     'typical OSM building': building,
@@ -43,4 +43,6 @@ for (const name in samples) {
         })
         .on('cycle', ({target}) => console.log(String(target)))
         .run();
+}
+
 }

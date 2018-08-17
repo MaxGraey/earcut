@@ -33,16 +33,16 @@ export function earcutCore(data: f64[], holeIndices: i32[], dim: i32 = 2): i32[]
 
   // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
   if (data.length > 80 * dim) {
-    minX = maxX = data[0];
-    minY = maxY = data[1];
+    minX = maxX = unchecked(data[0]);
+    minY = maxY = unchecked(data[1]);
 
     for (let i = dim; i < outerLen; i += dim) {
-      let x = data[i + 0];
-      let y = data[i + 1];
+      let x = unchecked(data[i + 0]);
+      let y = unchecked(data[i + 1]);
       minX  = Math.min(x, minX);
-      minY  = Math.min(x, minY);
+      minY  = Math.min(y, minY);
       maxX  = Math.max(x, maxX);
-      maxY  = Math.max(x, maxY);
+      maxY  = Math.max(y, maxY);
     }
 
     // minX, minY and invSize are later used to transform coords into integers for z-order calculation
@@ -59,11 +59,11 @@ function linkedList(data: f64[], start: i32, end: i32, dim: i32, clockwise: bool
 
   if (clockwise == (signedArea(data, start, end, dim) > 0)) {
     for (let i = start; i < end; i += dim) {
-      last = insertNode(i, data[i], data[i + 1], last);
+      last = insertNode(i, unchecked(data[i]), unchecked(data[i + 1]), last);
     }
   } else {
     for (let i = end - dim; i >= start; i -= dim) {
-      last = insertNode(i, data[i], data[i + 1], last);
+      last = insertNode(i, unchecked(data[i]), unchecked(data[i + 1]), last);
     }
   }
 
@@ -85,8 +85,8 @@ function eliminateHoles(data: f64[], holeIndices: i32[], outerNode: Node, dim: i
   var start: i32, end: i32, list: Node;
 
   for (let i = 0; i < holeLength; ++i) {
-    start = holeIndices[i] * dim;
-    end   = i < holeLength - 1 ? holeIndices[i + 1] * dim : dataLength;
+    start = unchecked(holeIndices[i]) * dim;
+    end   = i < holeLength - 1 ? unchecked(holeIndices[i + 1]) * dim : dataLength;
     list  = linkedList(data, start, end, dim);
 
     if (list === list.next) list.steiner = true;

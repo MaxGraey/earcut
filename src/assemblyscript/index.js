@@ -1,29 +1,24 @@
 'use strict';
 
-const fs   = require('fs');
-const path = require('path');
+const instance = require('./loader');
 
-const compiled = new WebAssembly.Module(fs.readFileSync(
-    path.resolve(__dirname, '../../build/release/earcut.as.wasm')
-));
 
-const memory = new WebAssembly.Memory({initial: 20});
-
-const imports = {
-    memory,
-    env: {
-        abort(msgPtr, filePtr, line, column) {
-            console.error(`[AssemblyScript]: abort at [${line}:${column}]`);
-        }
-    }
-};
-
-const {earcut} = new WebAssembly.Instance(compiled, imports).exports;
-
-function earcutFlat() {
-    console.log(earcut, memory.buffer);
+function setF64Array(memory, array) {
+    const F64 = new Float64Array(memory);
+    const U32 = new Uint32Array(memory);
+    U32[0] = array.length;
+    F64.set(array, 1);
 }
 
-earcutFlat();
+function earcutFlat(vertices, holes) {
+    const earcut = instance.earcut;
+    const buffer = instance.memory.buffer;
+
+    console.log(vertices);
+
+    // console.log(earcut, buffer);
+}
+
+// earcutFlat();
 
 module.exports = {earcutFlat};
