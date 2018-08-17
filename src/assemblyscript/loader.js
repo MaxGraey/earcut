@@ -3,8 +3,10 @@
 const fs   = require('fs');
 const path = require('path');
 
+const DEBUG = true;
+
 const compiled = new WebAssembly.Module(fs.readFileSync(
-    path.resolve(__dirname, '../../build/debug/earcut.as.wasm')
+    path.resolve(__dirname, `../../build/${ DEBUG ? 'debug' : 'release' }/earcut.as.wasm`)
 ));
 
 const memory = new WebAssembly.Memory({initial: (0x8000000 >>> 16) + 4});

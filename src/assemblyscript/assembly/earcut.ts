@@ -16,8 +16,8 @@ import {
 } from './utils';
 
 export function earcutCore(data: f64[], holeIndices: i32[], dim: i32 = 2): i32[] {
-  var hasHoles  = holeIndices ? holeIndices.length : false,
-      outerLen  = hasHoles ? holeIndices[0] * dim : data.length,
+  var hasHoles  = holeIndices ? holeIndices.length : 0,
+      outerLen  = hasHoles ? unchecked(holeIndices[0]) * dim : data.length,
       outerNode = linkedList(data, 0, outerLen, dim, true),
       triangles: i32[] = [];
 

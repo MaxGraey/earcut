@@ -12,7 +12,7 @@ const water    = earcutJS.flatten(require('./test/fixtures/water.json'));
 
 
 if (true) {
-    const {vertices, holes} = building;
+    const {vertices, holes} = dude;
 
     const verticesArray = Float64Array.from(vertices);
     const holesArray    = Uint32Array.from(holes);
@@ -37,6 +37,9 @@ for (const name in samples) {
     new Benchmark.Suite()
         .add(`JS ${name} (${verticesHalfLen} vertices):`, () => {
             earcutJS(vertices, holes);
+        })
+        .add(`AssemblyScript WASM ${name} (${verticesHalfLen} vertices):`, () => {
+            earcutAsWasm(verticesArray, holesArray);
         })
         .add(`Rust WASM ${name} (${verticesHalfLen} vertices):`, () => {
             earcutRustWasm(verticesArray, holesArray);
