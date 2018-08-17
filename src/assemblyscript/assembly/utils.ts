@@ -43,7 +43,7 @@ export function area(p: Node, q: Node, r: Node): f64 {
 export function signedArea(data: f64[], start: i32, end: i32, dim: i32): f64 {
   var sum = 0.0;
   for (let i = start, j = end - dim; i < end; i += dim) {
-    sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+    sum += (unchecked(data[j]) - unchecked(data[i])) * (unchecked(data[i + 1]) + unchecked(data[j + 1]));
     j = i;
   }
   return sum;
@@ -324,9 +324,9 @@ export function flatten(data: Array<f64[]>): FlattenResult {
   var holeIndex = 0;
 
   for (var i = 0, ilen = data.length; i < ilen; ++i) {
-    let di = data[i];
+    let di = unchecked(data[i]);
     for (let j = 0, jlen = di.length; j < jlen; ++j) {
-      let dij = di[j];
+      let dij = unchecked(di[j]);
       for (let d = 0; d < dimensions; ++d) {
         vertices.push(dij[d]);
       }
