@@ -18,8 +18,6 @@ if (false) {
     const verticesArray = Float64Array.from(vertices);
     const holesArray    = Uint32Array.from(holes);
 
-    console.log(holesArray);
-
     const triangles = earcutAsWasm(verticesArray, holesArray);
     console.log(triangles);
 } else {
@@ -27,8 +25,8 @@ if (false) {
 const samples = {
     // 'typical OSM building': building,
     // 'dude shape': dude,
-    // 'complex OSM water': water,
-    'huge complex water': waterHuge,
+    'complex OSM water': water,
+    // 'huge complex water': waterHuge,
 };
 
 for (const name in samples) {
