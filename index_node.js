@@ -11,22 +11,26 @@ const dude      = earcutJS.flatten(require('./test/fixtures/dude.json'));
 const water     = earcutJS.flatten(require('./test/fixtures/water.json'));
 const waterHuge = earcutJS.flatten(require('./test/fixtures/water-huge.json'));
 
+const deepEqual = require('assert').deepEqual;
 
 if (false) {
-    const {vertices, holes} = water;
+    const {vertices, holes} = waterHuge;
 
     const verticesArray = Float64Array.from(vertices);
     const holesArray    = Uint32Array.from(holes);
 
-    const triangles = earcutAsWasm(verticesArray, holesArray);
-    console.log(triangles);
+    const triangles1 = earcutAsWasm(verticesArray, holesArray);
+    const triangles2 = earcutJS(verticesArray, holesArray);
+
+    // deepEqual(triangles1, triangles2);
+    console.log(triangles1);
 } else {
 
 const samples = {
     // 'typical OSM building': building,
     // 'dude shape': dude,
-    'complex OSM water': water,
-    // 'huge complex water': waterHuge,
+    // 'complex OSM water': water,
+    'huge complex water': waterHuge,
 };
 
 for (const name in samples) {

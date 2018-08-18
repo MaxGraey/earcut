@@ -5,7 +5,7 @@ export class Node {
   prevZ:   Node | null = null  // previous nodes in z-order
   nextZ:   Node | null = null  // next nodes in z-order
   steiner: bool        = false // indicates whether this is a steiner point
-  z:       u32                 // z-order curve value
+  z:       i32         = 0     // z-order curve value
 
   constructor(
     public index: u32, // vertex index in coordinates array

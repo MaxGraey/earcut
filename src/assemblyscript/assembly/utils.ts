@@ -1,6 +1,11 @@
 
 import { Node, removeNode, sortLinked }  from './list';
-// import { Point } from './point';
+
+@external("env", "logf")
+declare function logf(value: f64): void;
+
+@external("env", "logi")
+declare function logi(value: u32): void;
 
 class FlattenResult {
   vertices:   f64[]
@@ -9,11 +14,11 @@ class FlattenResult {
 }
 
 @inline // z-order of a point given coords and inverse of the longer side of data bbox
-export function zOrder32(px: f64, py: f64, minX: f64, minY: f64, invSize: f64): u32 {
+export function zOrder32(px: f64, py: f64, minX: f64, minY: f64, invSize: f64): i32 {
   var scale = 32767.0 * invSize;
   // coords are transformed into non-negative 15-bit integer range
-  var x = ((px - minX) * scale) as u32;
-  var y = ((py - minY) * scale) as u32;
+  var x = ((px - minX) * scale) as i32;
+  var y = ((py - minY) * scale) as i32;
 
   x = (x | (x << 8)) & 0x00FF00FF;
   x = (x | (x << 4)) & 0x0F0F0F0F;
@@ -206,18 +211,11 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
 
   if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
-  // TODO optimize this
   // triangle bbox; min & max are calculated like this for speed
   var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
       minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
       maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
       maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
-  /*
-  var minTX = select<f64>(Math.min(a.x, c.x), Math.min(b.x, c.x), a.x < b.x),
-      minTY = select<f64>(Math.min(a.y, c.y), Math.min(b.y, c.y), a.y < b.y),
-      maxTX = select<f64>(Math.max(a.x, c.x), Math.max(b.x, c.x), a.x > b.x),
-      maxTY = select<f64>(Math.max(a.y, c.y), Math.max(b.y, c.y), a.y > b.y);
-  */
 
   // z-order range for the current triangle bbox;
   var minZ = zOrder32(minTX, minTY, minX, minY, invSize),
@@ -266,6 +264,7 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
   return true;
 }
 
+// FIXME contain bug
 // eliminate colinear or duplicate points
 export function filterPoints(start: Node, end: Node | null = null): Node {
   if (!start) return start;
@@ -277,7 +276,7 @@ export function filterPoints(start: Node, end: Node | null = null): Node {
     let pp = <Node>p.prev;
     let pn = <Node>p.next;
 
-    if (!p.steiner && ((p == pn) || area(pp, p, pn) == 0.0)) {
+    if (!p.steiner && (p == pn || area(pp, p, pn) == 0.0)) {
       removeNode(p);
       p = <Node>pp;
       end = pp;
