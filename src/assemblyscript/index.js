@@ -1,6 +1,7 @@
 'use strict';
 const {
     earcut,
+    purge,
     getU32Array,
     newU32Array,
     newF64Array
@@ -12,7 +13,8 @@ function earcutFlat(vertices, holes) {
 
     const triangles = earcut(verticesArray, holesArray);
     if (!triangles) return new Uint32Array();
-    return getU32Array(triangles);
+    const result = getU32Array(triangles);
+    return result;
 }
 
 module.exports = {earcutFlat};

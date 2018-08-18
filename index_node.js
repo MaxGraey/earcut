@@ -14,13 +14,13 @@ const waterHuge = earcutJS.flatten(require('./test/fixtures/water-huge.json'));
 const deepEqual = require('assert').deepEqual;
 
 if (false) {
-    const {vertices, holes} = waterHuge;
+    const {vertices, holes} = water;
 
     const verticesArray = Float64Array.from(vertices);
     const holesArray    = Uint32Array.from(holes);
 
     const triangles1 = earcutAsWasm(verticesArray, holesArray);
-    const triangles2 = earcutJS(verticesArray, holesArray);
+    // const triangles2 = earcutJS(verticesArray, holesArray);
 
     // deepEqual(triangles1, triangles2);
     console.log(triangles1);
@@ -38,16 +38,16 @@ for (const name in samples) {
 
     const verticesArray   = Float64Array.from(vertices);
     const holesArray      = Uint32Array.from(holes);
-    const verticesHalfLen = vertices.length / 2;
+    const verticesCount   = vertices.length / 2;
 
     new Benchmark.Suite()
-        .add(`JS ${name} (${verticesHalfLen} vertices):`, () => {
+        .add(`JS ${name} (${verticesCount} vertices):`, () => {
             earcutJS(vertices, holes);
         })
-        .add(`AssemblyScript WASM ${name} (${verticesHalfLen} vertices):`, () => {
+        .add(`AssemblyScript WASM ${name} (${verticesCount} vertices):`, () => {
             earcutAsWasm(verticesArray, holesArray);
         })
-        .add(`Rust WASM ${name} (${verticesHalfLen} vertices):`, () => {
+        .add(`Rust WASM ${name} (${verticesCount} vertices):`, () => {
             earcutRustWasm(verticesArray, holesArray);
         })
         .on('cycle', ({target}) => console.log(String(target)))

@@ -46,7 +46,7 @@ function refreshMemory() {
 }
 
 function newF64Array(typedArray) {
-    if (mem !== memory.buffer || !cached.has(typedArray)) {
+    if (!cached.has(typedArray)) {
         const ptr = allocF64(typedArray.length);
         refreshMemory();
         const dataStart = (U32[ptr >>> 2] >>> 2) + 2;
@@ -55,12 +55,13 @@ function newF64Array(typedArray) {
         console.count('new array');
         return ptr;
     } else {
+        refreshMemory();
         return cached.get(typedArray);
     }
 }
 
 function newU32Array(typedArray) {
-    if (mem !== memory.buffer || !cached.has(typedArray)) {
+    if (!cached.has(typedArray)) {
         const ptr = allocU32(typedArray.length);
         refreshMemory();
         const dataStart = (U32[ptr >>> 2] >>> 2) + 2;
@@ -68,6 +69,7 @@ function newU32Array(typedArray) {
         cached.set(typedArray, ptr);
         return ptr;
     } else {
+        refreshMemory();
         return cached.get(typedArray);
     }
 }
