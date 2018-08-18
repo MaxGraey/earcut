@@ -6,25 +6,29 @@ const earcutJS       = require('./src/earcut');
 const earcutRustWasm = require('./earcut').earcut_flat;
 const earcutAsWasm   = require('./src/assemblyscript').earcutFlat;
 
-const building = earcutJS.flatten(require('./test/fixtures/building.json'));
-const dude     = earcutJS.flatten(require('./test/fixtures/dude.json'));
-const water    = earcutJS.flatten(require('./test/fixtures/water.json'));
+const building  = earcutJS.flatten(require('./test/fixtures/building.json'));
+const dude      = earcutJS.flatten(require('./test/fixtures/dude.json'));
+const water     = earcutJS.flatten(require('./test/fixtures/water.json'));
+const waterHuge = earcutJS.flatten(require('./test/fixtures/water-huge.json'));
 
 
-if (true) {
-    const {vertices, holes} = dude;
+if (false) {
+    const {vertices, holes} = water;
 
     const verticesArray = Float64Array.from(vertices);
     const holesArray    = Uint32Array.from(holes);
+
+    console.log(holesArray);
 
     const triangles = earcutAsWasm(verticesArray, holesArray);
     console.log(triangles);
 } else {
 
 const samples = {
-    'typical OSM building': building,
-    'dude shape': dude,
-    'complex OSM water': water,
+    // 'typical OSM building': building,
+    // 'dude shape': dude,
+    // 'complex OSM water': water,
+    'huge complex water': waterHuge,
 };
 
 for (const name in samples) {

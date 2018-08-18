@@ -15,13 +15,29 @@ import {
   filterPoints,
 } from './utils';
 
-export function earcutCore(data: f64[], holeIndices: i32[], dim: i32 = 2): i32[] {
+@external("env", "logf")
+declare function logf(value: f64): void;
+
+@external("env", "logi")
+declare function logi(value: u32): void;
+
+export function earcutCore(data: f64[], holeIndices: u32[], dim: i32 = 2): ArrayBuffer {
+  /*logf(data[0]);
+  logf(data[1]);
+  logf(data[2]);
+  logf(data[3]);
+  logf(data[4]);
+  logf(data[5]);*/
+
+  // logi(holeIndices[0]);
+  // logi(holeIndices[1]);
+
   var hasHoles  = holeIndices ? holeIndices.length : 0,
       outerLen  = hasHoles ? unchecked(holeIndices[0]) * dim : data.length,
       outerNode = linkedList(data, 0, outerLen, dim, true),
       triangles: i32[] = [];
 
-  if (!outerNode) return triangles;
+  if (!outerNode) return null;
 
   if (hasHoles) {
     outerNode = eliminateHoles(data, holeIndices, outerNode as Node, dim);
@@ -36,7 +52,7 @@ export function earcutCore(data: f64[], holeIndices: i32[], dim: i32 = 2): i32[]
     minX = maxX = unchecked(data[0]);
     minY = maxY = unchecked(data[1]);
 
-    for (let i = dim; i < outerLen; i += dim) {
+    for (let i: u32 = dim; i < outerLen; i += dim) {
       let x = unchecked(data[i + 0]);
       let y = unchecked(data[i + 1]);
       minX  = Math.min(x, minX);
@@ -50,7 +66,7 @@ export function earcutCore(data: f64[], holeIndices: i32[], dim: i32 = 2): i32[]
     if (invSize != 0.0) invSize = 1.0 / invSize;
   }
   earcutLinked(outerNode as Node, triangles, dim, minX, minY, invSize);
-  return triangles;
+  return triangles.buffer_;
 }
 
 // create a circular doubly linked list from polygon points in the specified winding order
@@ -77,7 +93,7 @@ function linkedList(data: f64[], start: i32, end: i32, dim: i32, clockwise: bool
 
 
 // link every hole into the outer loop, producing a single-ring polygon without holes
-function eliminateHoles(data: f64[], holeIndices: i32[], outerNode: Node, dim: i32 = 2): Node {
+function eliminateHoles(data: f64[], holeIndices: u32[], outerNode: Node, dim: i32 = 2): Node {
   var holeLength = holeIndices.length;
   var dataLength = data.length;
   var queue      = new Array<Node>(holeLength);
@@ -90,7 +106,7 @@ function eliminateHoles(data: f64[], holeIndices: i32[], outerNode: Node, dim: i
     list  = linkedList(data, start, end, dim);
 
     if (list === list.next) list.steiner = true;
-    queue[i] = getLeftmost(list as Node);
+    queue[i] = unchecked(getLeftmost(list as Node));
   }
 
   sort<Node>(queue, (a: Node, b: Node): i32 => {
@@ -101,7 +117,7 @@ function eliminateHoles(data: f64[], holeIndices: i32[], outerNode: Node, dim: i
 
   // process holes from left to right
   for (let i = 0; i < holeLength; ++i) {
-    eliminateHole(queue[i], outerNode);
+    eliminateHole(unchecked(queue[i]), outerNode);
     outerNode = filterPoints(outerNode, outerNode.next);
   }
 
@@ -250,7 +266,7 @@ function earcutLinked(ear: Node | null, triangles: i32[], dim: i32, minX: f64, m
     prev = <Node>ear.prev;
     next = <Node>ear.next;
 
-    if (invSize != 0.0 ? isEarHashed(<Node>ear, minX, minY, invSize) : isEar(<Node>ear)) {
+    if (invSize ? isEarHashed(<Node>ear, minX, minY, invSize) : isEar(<Node>ear)) {
       // cut off the triangle
       triangles.push(prev.index / dim);
       triangles.push(ear.index  / dim);

@@ -10,9 +10,10 @@ class FlattenResult {
 
 @inline // z-order of a point given coords and inverse of the longer side of data bbox
 export function zOrder32(px: f64, py: f64, minX: f64, minY: f64, invSize: f64): u32 {
+  var scale = 32767.0 * invSize;
   // coords are transformed into non-negative 15-bit integer range
-  var x = (32767.0 * (px - minX) * invSize) as u32;
-  var y = (32767.0 * (py - minY) * invSize) as u32;
+  var x = ((px - minX) * scale) as u32;
+  var y = ((py - minY) * scale) as u32;
 
   x = (x | (x << 8)) & 0x00FF00FF;
   x = (x | (x << 4)) & 0x0F0F0F0F;
@@ -29,9 +30,12 @@ export function zOrder32(px: f64, py: f64, minX: f64, minY: f64, invSize: f64): 
 
 @inline // check if a point lies within a convex triangle
 export function pointInTriangle(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy: f64, px: f64, py: f64): bool {
-  return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
-         (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
-         (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
+  var apx = ax - px, apy = ay - py;
+  var abx = bx - px, aby = by - py;
+  var cpx = cx - px, cpy = cy - py;
+  return cpx * apy - apx * cpy >= 0 &&
+         apx * aby - abx * apy >= 0 &&
+         abx * cpy - cpx * aby >= 0;
 }
 
 @inline // signed area of a triangle
@@ -62,7 +66,7 @@ export function locallyInside(a: Node, b: Node): bool {
   var an = <Node>a.next;
   return area(ap, a, an) < 0 ?
       area(a, b, an) >= 0 && area(a, ap, b) >= 0 :
-      area(a, b, ap) <  0 || area(a, an, b) <  0;
+      area(a, b, ap)  < 0 || area(a, an, b)  < 0;
 }
 
 @inline // check if the middle point of a polygon diagonal is inside the polygon
@@ -208,6 +212,12 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
       minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
       maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
       maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
+  /*
+  var minTX = select<f64>(Math.min(a.x, c.x), Math.min(b.x, c.x), a.x < b.x),
+      minTY = select<f64>(Math.min(a.y, c.y), Math.min(b.y, c.y), a.y < b.y),
+      maxTX = select<f64>(Math.max(a.x, c.x), Math.max(b.x, c.x), a.x > b.x),
+      maxTY = select<f64>(Math.max(a.y, c.y), Math.max(b.y, c.y), a.y > b.y);
+  */
 
   // z-order range for the current triangle bbox;
   var minZ = zOrder32(minTX, minTY, minX, minY, invSize),
@@ -217,7 +227,7 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
       n = ear.nextZ;
 
   // look for points inside the triangle in both directions
-  while (p !== null && p.z >= minZ && n !== null && n.z <= maxZ) {
+  while (p !== null && n !== null && p.z >= minZ && n.z <= maxZ) {
     if (
       p !== ear.prev && p !== ear.next &&
       pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&

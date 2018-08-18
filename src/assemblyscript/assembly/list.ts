@@ -8,7 +8,7 @@ export class Node {
   z:       u32                 // z-order curve value
 
   constructor(
-    public index: i32, // vertex index in coordinates array
+    public index: u32, // vertex index in coordinates array
     public x:     f64, // vertex coordinate "x"
     public y:     f64, // vertex coordinate "y"
   ) {}
