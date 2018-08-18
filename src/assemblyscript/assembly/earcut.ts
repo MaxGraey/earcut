@@ -21,7 +21,7 @@ declare function logf(value: f64): void;
 @external("env", "logi")
 declare function logi(value: u32): void;
 
-export function earcutCore(data: f64[], holeIndices: u32[], dim: i32 = 2): ArrayBuffer {
+export function earcutCore(data: f64[], holeIndices: u32[], dim: i32 = 2): i32[] {
   /*logf(data[0]);
   logf(data[1]);
   logf(data[2]);
@@ -66,7 +66,7 @@ export function earcutCore(data: f64[], holeIndices: u32[], dim: i32 = 2): Array
     if (invSize != 0.0) invSize = 1.0 / invSize;
   }
   earcutLinked(outerNode as Node, triangles, dim, minX, minY, invSize);
-  return triangles.buffer_;
+  return triangles;
 }
 
 // create a circular doubly linked list from polygon points in the specified winding order

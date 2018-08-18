@@ -26,7 +26,7 @@ export function earcut(
   // holesOffset: usize, holesLength: i32
   data: Array<f64>,
   holes: Array<u32>
-): ArrayBuffer {
+): i32[] {
   // var data  = unboxArray<f64>(dataOffset,  dataLength);
   // var holes = unboxArray<i32>(holesOffset, holesLength);
   return earcutCore(data, holes);
