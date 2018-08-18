@@ -82,11 +82,11 @@ export function middleInside(a: Node, b: Node): bool {
       cy = (a.y + b.y) * 0.5;
   do {
     let nextP = <Node>p.next;
-
     let px  = p.x;
     let py  = p.y;
     let pnx = nextP.x;
     let pny = nextP.y;
+
     inside ^= <i32>(
       pny != py &&
       (py > cy != pny > cy) &&
@@ -169,7 +169,8 @@ export function getLeftmost(start: Node): Node {
 @inline // interlink polygon nodes in z-order
 export function indexCurve(start: Node, minX: f64, minY: f64, invSize: f64): void {
   var p: Node | null = start;
-  var scale = 32767.0 * invSize;
+
+  var scale      = 32767 * invSize;
   var scaledMinX = minX * scale;
   var scaledMinY = minY * scale;
   do {

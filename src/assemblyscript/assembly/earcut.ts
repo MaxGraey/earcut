@@ -105,11 +105,7 @@ function eliminateHoles(data: f64[], holeIndices: u32[], outerNode: Node, dim: u
     queue[i] = unchecked(getLeftmost(list as Node));
   }
 
-  sort<Node>(queue, (a: Node, b: Node): i32 => {
-    var ax = a.x;
-    var bx = b.x;
-    return <i32>(ax > bx) - <i32>(ax < bx);
-  });
+  sort<Node>(queue, (a: Node, b: Node): i32 => <i32>(a.x > b.x) - <i32>(a.x < b.x));
 
   // process holes from left to right
   for (let i = 0; i < holeLength; ++i) {

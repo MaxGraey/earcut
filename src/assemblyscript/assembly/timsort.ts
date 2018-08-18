@@ -1,5 +1,6 @@
 import { insertionSort } from 'internal/array';
 
+@inline
 export function sort<T>(data: Array<T>, comparator: (a: T, b: T) => i32): Array<T> {
   var length = data.length_;
   if (length <= 1) return data;

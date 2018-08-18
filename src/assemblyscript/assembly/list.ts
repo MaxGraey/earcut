@@ -15,7 +15,7 @@ export class Node {
 
   @inline @operator('==')
   equals(other: Node | null): bool {
-    return this === other || (this.x == other.x && this.y == other.y);
+    return this.x == other.x && this.y == other.y;
   }
 
   @inline @operator('!=')
