@@ -10,6 +10,6 @@ export function allocU32Array(length: i32): u32[] {
   return new Array<u32>(length);
 }
 
-export function earcut(data: Array<f64>, holes: Array<u32>): i32[] {
+export function earcut(data: Array<f64>, holes: Array<u32>): u32[] {
   return earcutCore(data, holes);
 }

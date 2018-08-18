@@ -26,11 +26,10 @@ declare function logi(value: u32): void;
 declare function logU32Array(arr: Array<u32>): void;
 */
 
-export function earcutCore(data: f64[], holeIndices: u32[], dim: i32 = 2): i32[] {
+export function earcutCore(data: f64[], holeIndices: u32[], dim: u32 = 2): u32[] {
   var hasHoles  = holeIndices ? holeIndices.length : 0,
       outerLen  = hasHoles ? unchecked(holeIndices[0]) * dim : data.length,
-      outerNode = linkedList(data, 0, outerLen, dim, true),
-      triangles: i32[] = [];
+      outerNode = linkedList(data, 0, outerLen, dim, true);
 
   if (!outerNode) return null;
 
@@ -60,20 +59,22 @@ export function earcutCore(data: f64[], holeIndices: u32[], dim: i32 = 2): i32[]
     invSize = Math.max(maxX - minX, maxY - minY);
     if (invSize != 0.0) invSize = 1.0 / invSize;
   }
+
+  var triangles: u32[] = [];
   earcutLinked(outerNode as Node, triangles, dim, minX, minY, invSize);
   return triangles;
 }
 
 // create a circular doubly linked list from polygon points in the specified winding order
-function linkedList(data: f64[], start: i32, end: i32, dim: i32, clockwise: bool = false): Node {
+function linkedList(data: f64[], start: u32, end: u32, dim: u32, clockwise: bool = false): Node {
   var last: Node | null = null;
 
   if (clockwise == (signedArea(data, start, end, dim) > 0)) {
-    for (let i = start; i < end; i += dim) {
+    for (let i: u32 = start; i < end; i += dim) {
       last = insertNode(i, unchecked(data[i]), unchecked(data[i + 1]), last);
     }
   } else {
-    for (let i = end - dim; i >= start; i -= dim) {
+    for (let i: u32 = end - dim; i >= start; i -= dim) {
       last = insertNode(i, unchecked(data[i]), unchecked(data[i + 1]), last);
     }
   }
@@ -88,12 +89,12 @@ function linkedList(data: f64[], start: i32, end: i32, dim: i32, clockwise: bool
 
 
 // link every hole into the outer loop, producing a single-ring polygon without holes
-function eliminateHoles(data: f64[], holeIndices: u32[], outerNode: Node, dim: i32 = 2): Node {
+function eliminateHoles(data: f64[], holeIndices: u32[], outerNode: Node, dim: u32 = 2): Node {
   var holeLength = holeIndices.length;
-  var dataLength = data.length;
+  var dataLength = data.length as u32;
   var queue      = new Array<Node>(holeLength);
 
-  var start: i32, end: i32, list: Node;
+  var start: u32, end: u32, list: Node;
 
   for (let i = 0; i < holeLength; ++i) {
     start = unchecked(holeIndices[i]) * dim;
@@ -195,7 +196,7 @@ function findHoleBridge(hole: Node, outerNode: Node): Node | null {
 }
 
 // go through all polygon nodes and cure small local self-intersections
-function cureLocalIntersections(start: Node, triangles: i32[], dim: i32): Node {
+function cureLocalIntersections(start: Node, triangles: u32[], dim: u32): Node {
   var p = start;
   do {
     let a = <Node>p.prev;
@@ -226,7 +227,7 @@ function cureLocalIntersections(start: Node, triangles: i32[], dim: i32): Node {
 }
 
 // try splitting polygon into two and triangulate them independently
-function splitEarcut(start: Node, triangles: i32[], dim: i32, minX: f64, minY: f64, invSize: f64): void {
+function splitEarcut(start: Node, triangles: u32[], dim: u32, minX: f64, minY: f64, invSize: f64): void {
   // look for a valid diagonal that divides the polygon into two
   var a = start;
   do {
@@ -252,7 +253,14 @@ function splitEarcut(start: Node, triangles: i32[], dim: i32, minX: f64, minY: f
 }
 
 // main ear slicing loop which triangulates a polygon (given as a linked list)
-function earcutLinked(ear: Node | null, triangles: i32[], dim: i32, minX: f64, minY: f64, invSize: f64 = 0.0, pass: i32 = 0): void {
+function earcutLinked(
+  ear: Node | null,
+  triangles: u32[],
+  dim: u32,
+  minX: f64, minY: f64,
+  invSize: f64 = 0.0,
+  pass: i32 = 0
+): void {
   if (!ear) return;
 
   // interlink polygon nodes in z-order

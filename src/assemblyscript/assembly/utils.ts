@@ -1,17 +1,13 @@
 
 import { Node, removeNode, sortLinked }  from './list';
 
+/*
 @external("env", "logf")
 declare function logf(value: f64): void;
 
 @external("env", "logi")
 declare function logi(value: u32): void;
-
-class FlattenResult {
-  vertices:   f64[]
-  holes:      i32[]
-  dimensions: i32
-}
+*/
 
 @inline // z-order of a point given coords and inverse of the longer side of data bbox
 export function zOrder32(px: f64, py: f64, scaledMinX: f64, scaledMinY: f64, scale: f64): i32 {
@@ -53,9 +49,9 @@ export function area(p: Node, q: Node, r: Node): f64 {
 }
 
 @inline
-export function signedArea(data: f64[], start: i32, end: i32, dim: i32): f64 {
+export function signedArea(data: f64[], start: u32, end: u32, dim: u32): f64 {
   var sum = 0.0;
-  for (let i = start, j = end - dim; i < end; i += dim) {
+  for (let i: u32 = start, j: u32 = end - dim; i < end; i += dim) {
     sum += (unchecked(data[j]) - unchecked(data[i])) * (unchecked(data[i + 1]) + unchecked(data[j + 1]));
     j = i;
   }
@@ -91,12 +87,6 @@ export function middleInside(a: Node, b: Node): bool {
     let py  = p.y;
     let pnx = nextP.x;
     let pny = nextP.y;
-    /*if (
-      pny != py && ((py > cy) != (pny > cy)) &&
-      (cx < (pnx - px) * (cy - py) / (pny - py) + px)
-    ) {
-      inside = !inside;
-    }*/
     inside ^= <i32>(
       pny != py &&
       (py > cy != pny > cy) &&
@@ -290,7 +280,6 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
   return true;
 }
 
-// FIXME contain bug
 // eliminate colinear or duplicate points
 export function filterPoints(start: Node, end: Node | null = null): Node {
   if (!start) return start;
@@ -317,6 +306,13 @@ export function filterPoints(start: Node, end: Node | null = null): Node {
 
 
 /*
+
+class FlattenResult {
+  vertices:   f64[]
+  holes:      i32[]
+  dimensions: i32
+}
+
 export function deviation(data: f64[], holeIndices: i32[], dim: i32, triangles: i32[]): f64 {
   var hasHoles = holeIndices !== null && holeIndices.length;
   var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
