@@ -1,4 +1,4 @@
-import 'allocator/tlsf';
+import 'allocator/arena';
 
 import { earcutCore } from './earcut';
 

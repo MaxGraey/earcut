@@ -63,7 +63,7 @@ export function sortLinked(list: Node | null): void {
     tail = null;
     numMerges = 0;
 
-    while (p !== null) {
+    while (p) {
       ++numMerges;
       q = p;
       pSize = 0;

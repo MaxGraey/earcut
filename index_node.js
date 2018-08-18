@@ -14,16 +14,19 @@ const waterHuge = earcutJS.flatten(require('./test/fixtures/water-huge.json'));
 const deepEqual = require('assert').deepEqual;
 
 if (false) {
-    const {vertices, holes} = water;
+    const {vertices, holes} = building;
 
     const verticesArray = Float64Array.from(vertices);
     const holesArray    = Uint32Array.from(holes);
 
+    console.time('earcutAsWasm');
     const triangles1 = earcutAsWasm(verticesArray, holesArray);
-    // const triangles2 = earcutJS(verticesArray, holesArray);
+    console.timeEnd('earcutAsWasm');
 
-    // deepEqual(triangles1, triangles2);
-    console.log(triangles1);
+    const triangles2 = earcutJS(verticesArray, holesArray);
+
+    deepEqual(triangles1, triangles2);
+    // console.log(triangles1);
 } else {
 
 const samples = {

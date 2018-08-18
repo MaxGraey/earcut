@@ -15,6 +15,7 @@ import {
   filterPoints,
 } from './utils';
 
+/*
 @external("env", "logf")
 declare function logf(value: f64): void;
 
@@ -23,18 +24,9 @@ declare function logi(value: u32): void;
 
 @external("env", "logU32Array")
 declare function logU32Array(arr: Array<u32>): void;
+*/
 
 export function earcutCore(data: f64[], holeIndices: u32[], dim: i32 = 2): i32[] {
-  // logf(data[0]);
-  // logf(data[1]);
-  // logf(data[2]);
-  // logf(data[3]);
-  // logf(data[4]);
-  // logf(data[5]);
-
-  // logi(holeIndices[0]);
-  // logi(holeIndices[1]);
-
   var hasHoles  = holeIndices ? holeIndices.length : 0,
       outerLen  = hasHoles ? unchecked(holeIndices[0]) * dim : data.length,
       outerNode = linkedList(data, 0, outerLen, dim, true),
@@ -132,7 +124,7 @@ function eliminateHoles(data: f64[], holeIndices: u32[], outerNode: Node, dim: i
 function eliminateHole(hole: Node, outerNode: Node): void {
   var outer = findHoleBridge(hole, outerNode);
   if (outer) {
-    var b = splitPolygon(<Node>outer, hole);
+    let b = splitPolygon(<Node>outer, hole);
     filterPoints(b, b.next);
   }
 }
@@ -149,15 +141,19 @@ function findHoleBridge(hole: Node, outerNode: Node): Node | null {
   // find a segment intersected by a ray from the hole's leftmost point to the left;
   // segment's endpoint with lesser x will be potential connection point
   do {
-    if (hy <= p.y && hy >= p.next.y && p.next.y != p.y) {
-      let x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+    let py  = p.y;
+    let pny = p.next.y;
+    if (hy <= py && hy >= pny && pny != py) {
+      let px  = p.x;
+      let pnx = p.next.x;
+      let x = px + (hy - py) * (pnx - px) / (pny - py);
       if (x <= hx && x > qx) {
         qx = x;
         if (x == hx) {
-          if (hy == p.y)      return p;
-          if (hy == p.next.y) return p.next;
+          if (hy == py)  return p;
+          if (hy == pny) return p.next;
         }
-        m = p.x < p.next.x ? p : p.next;
+        m = select<Node | null>(p, p.next, px < pnx);
       }
     }
     p = p.next;
@@ -178,14 +174,17 @@ function findHoleBridge(hole: Node, outerNode: Node): Node | null {
 
   p = m.next;
   while (p !== stop) {
-    if (
-      hx >= p.x && p.x >= mx && hx != p.x &&
-      pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)
-    ) {
-      tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
-      if ((tan < tanMin || ((tan == tanMin) && (p.x > m.x))) && locallyInside(p as Node, hole)) {
-        m = p;
-        tanMin = tan;
+    let px = p.x;
+    if (hx >= px && px >= mx && hx != px) {
+      let py = p.y;
+      let a  = hy < my ? hx : qx;
+      let c  = hy < my ? qx : hx;
+      if (pointInTriangle(a, hy, mx, my, c, hy, px, py)) {
+        tan = Math.abs(hy - py) / (hx - px); // tangential
+        if ((tan < tanMin || ((tan == tanMin) && (px > m.x))) && locallyInside(p as Node, hole)) {
+          m = p;
+          tanMin = tan;
+        }
       }
     }
 

@@ -52,7 +52,7 @@ function newF64Array(typedArray) {
         const dataStart = (U32[ptr >>> 2] >>> 2) + 2;
         F64.set(typedArray, dataStart >>> 1);
         cached.set(typedArray, ptr);
-        console.count('new array');
+        // console.count('new array');
         return ptr;
     } else {
         refreshMemory();

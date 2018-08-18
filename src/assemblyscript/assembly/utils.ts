@@ -14,11 +14,10 @@ class FlattenResult {
 }
 
 @inline // z-order of a point given coords and inverse of the longer side of data bbox
-export function zOrder32(px: f64, py: f64, minX: f64, minY: f64, invSize: f64): i32 {
-  var scale = 32767.0 * invSize;
+export function zOrder32(px: f64, py: f64, scaledMinX: f64, scaledMinY: f64, scale: f64): i32 {
   // coords are transformed into non-negative 15-bit integer range
-  var x = ((px - minX) * scale) as i32;
-  var y = ((py - minY) * scale) as i32;
+  var x = (px * scale - scaledMinX) as i32;
+  var y = (py * scale - scaledMinY) as i32;
 
   x = (x | (x << 8)) & 0x00FF00FF;
   x = (x | (x << 4)) & 0x0F0F0F0F;
@@ -34,7 +33,12 @@ export function zOrder32(px: f64, py: f64, minX: f64, minY: f64, invSize: f64): 
 }
 
 @inline // check if a point lies within a convex triangle
-export function pointInTriangle(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy: f64, px: f64, py: f64): bool {
+export function pointInTriangle(
+  ax: f64, ay: f64,
+  bx: f64, by: f64,
+  cx: f64, cy: f64,
+  px: f64, py: f64
+): bool {
   var apx = ax - px, apy = ay - py;
   var abx = bx - px, aby = by - py;
   var cpx = cx - px, cpy = cy - py;
@@ -77,7 +81,7 @@ export function locallyInside(a: Node, b: Node): bool {
 @inline // check if the middle point of a polygon diagonal is inside the polygon
 export function middleInside(a: Node, b: Node): bool {
   var p = a,
-      inside = false,
+      inside = 0,
       cx = (a.x + b.x) * 0.5,
       cy = (a.y + b.y) * 0.5;
   do {
@@ -87,16 +91,22 @@ export function middleInside(a: Node, b: Node): bool {
     let py  = p.y;
     let pnx = nextP.x;
     let pny = nextP.y;
-    if (
+    /*if (
       pny != py && ((py > cy) != (pny > cy)) &&
       (cx < (pnx - px) * (cy - py) / (pny - py) + px)
     ) {
       inside = !inside;
-    }
+    }*/
+    inside ^= <i32>(
+      pny != py &&
+      (py > cy != pny > cy) &&
+      (cx < (pnx - px) * (cy - py) / (pny - py) + px)
+    );
+
     p = nextP;
   } while (p !== a);
 
-  return inside;
+  return <bool>inside;
 }
 
 @inline // check if a polygon diagonal intersects any polygon segments
@@ -169,8 +179,11 @@ export function getLeftmost(start: Node): Node {
 @inline // interlink polygon nodes in z-order
 export function indexCurve(start: Node, minX: f64, minY: f64, invSize: f64): void {
   var p: Node | null = start;
+  var scale = 32767.0 * invSize;
+  var scaledMinX = minX * scale;
+  var scaledMinY = minY * scale;
   do {
-    if (!p.z) p.z = zOrder32(p.x, p.y, minX, minY, invSize);
+    if (!p.z) p.z = zOrder32(p.x, p.y, scaledMinX, scaledMinY, scale);
     p.prevZ = p.prev;
     p.nextZ = p.next;
     p       = p.next;
@@ -211,31 +224,44 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
 
   if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
+  let ax = a.x;
+  let ay = a.y;
+  let bx = b.x;
+  let by = b.y;
+  let cx = c.x;
+  let cy = c.y;
+
   // triangle bbox; min & max are calculated like this for speed
-  var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
-      minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
-      maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
-      maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
+  var minTX = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),
+      minTY = ay < by ? (ay < cy ? ay : cy) : (by < cy ? by : cy),
+      maxTX = ax > bx ? (ax > cx ? ax : cx) : (bx > cx ? bx : cx),
+      maxTY = ay > by ? (ay > cy ? ay : cy) : (by > cy ? by : cy);
+
+  var scale      = 32767 * invSize;
+  var scaledMinX = minX * scale;
+  var scaledMinY = minY * scale;
 
   // z-order range for the current triangle bbox;
-  var minZ = zOrder32(minTX, minTY, minX, minY, invSize),
-      maxZ = zOrder32(maxTX, maxTY, minX, minY, invSize);
+  var minZ = zOrder32(minTX, minTY, scaledMinX, scaledMinY, scale),
+      maxZ = zOrder32(maxTX, maxTY, scaledMinX, scaledMinY, scale);
 
-  var p = ear.prevZ,
-      n = ear.nextZ;
+  var p  = ear.prevZ,
+      n  = ear.nextZ,
+      ep = ear.prev,
+      en = ear.next;
 
   // look for points inside the triangle in both directions
   while (p !== null && n !== null && p.z >= minZ && n.z <= maxZ) {
     if (
-      p !== ear.prev && p !== ear.next &&
-      pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+      p !== ep && p !== en &&
+      pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
       area(<Node>p.prev, <Node>p, <Node>p.next) >= 0
     ) return false;
     p = p.prevZ;
 
     if (
-      n !== ear.prev && n !== ear.next &&
-      pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+      n !== ep && n !== en &&
+      pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) &&
       area(<Node>n.prev, <Node>n, <Node>n.next) >= 0
     ) return false;
     n = n.nextZ;
@@ -244,8 +270,8 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
   // look for remaining points in decreasing z-order
   while (p !== null && p.z >= minZ) {
     if (
-      p !== ear.prev && p !== ear.next &&
-      pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+      p !== ep && p !== en &&
+      pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
       area(<Node>p.prev, <Node>p, <Node>p.next) >= 0
     ) return false;
     p = p.prevZ;
@@ -254,8 +280,8 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
   // look for remaining points in increasing z-order
   while (n !== null && n.z <= maxZ) {
     if (
-      n !== ear.prev && n !== ear.next &&
-      pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+      n !== ep && n !== en &&
+      pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) &&
       area(<Node>n.prev, <Node>n, <Node>n.next) >= 0
     ) return false;
     n = n.nextZ;
@@ -289,6 +315,8 @@ export function filterPoints(start: Node, end: Node | null = null): Node {
   return end as Node;
 }
 
+
+/*
 export function deviation(data: f64[], holeIndices: i32[], dim: i32, triangles: i32[]): f64 {
   var hasHoles = holeIndices !== null && holeIndices.length;
   var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
@@ -347,3 +375,4 @@ export function flatten(data: Array<f64[]>): FlattenResult {
   }
   return result;
 }
+*/
