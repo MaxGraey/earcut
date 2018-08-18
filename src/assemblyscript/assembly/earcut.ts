@@ -74,7 +74,7 @@ function linkedList(data: f64[], start: u32, end: u32, dim: u32, clockwise: bool
       last = insertNode(i, unchecked(data[i]), unchecked(data[i + 1]), last);
     }
   } else {
-    for (let i: u32 = end - dim; i >= start; i -= dim) {
+    for (let i: i32 = end - dim; i >= <i32>start; i -= dim) {
       last = insertNode(i, unchecked(data[i]), unchecked(data[i + 1]), last);
     }
   }
