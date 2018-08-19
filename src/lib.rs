@@ -1,8 +1,10 @@
 #![feature(slice_patterns)]
-#![feature(iterator_flatten)]
 #![feature(test)]
 #![feature(exact_chunks)]
-#![feature(wasm_custom_section, wasm_import_module, use_extern_macros)]
+
+// already stable
+// #![feature(iterator_flatten)]
+#![feature(use_extern_macros)]
 
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
