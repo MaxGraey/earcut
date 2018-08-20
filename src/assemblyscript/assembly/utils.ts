@@ -194,11 +194,15 @@ export function isEar(ear: Node): bool {
 
   if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
+  let ax = a.x, ay = a.y;
+  let bx = b.x, by = b.y;
+  let cx = c.x, cy = c.y;
+
   // now make sure we don't have other points inside the potential ear
   var p = ear.next.next;
   while (p != ear.prev) {
     if (
-      pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+      pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
       area(<Node>p.prev, <Node>p, <Node>p.next) >= 0
     ) return false;
     p = p.next;
@@ -215,12 +219,9 @@ export function isEarHashed(ear: Node, minX: f64, minY: f64, invSize: f64): bool
 
   if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
-  let ax = a.x;
-  let ay = a.y;
-  let bx = b.x;
-  let by = b.y;
-  let cx = c.x;
-  let cy = c.y;
+  let ax = a.x, ay = a.y;
+  let bx = b.x, by = b.y;
+  let cx = c.x, cy = c.y;
 
   // triangle bbox; min & max are calculated like this for speed
   var minTX = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),

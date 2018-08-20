@@ -21,11 +21,13 @@ use typed_arena::Arena;
 pub struct Point(f64, f64);
 
 impl Point {
+    #[inline]
     fn min(self, p: Point) -> Point {
         Point(f64::min(self.0, p.0),
               f64::min(self.1, p.1))
     }
 
+    #[inline]
     fn max(self, p: Point) -> Point {
         Point(f64::max(self.0, p.0),
               f64::max(self.1, p.1))
@@ -52,10 +54,14 @@ struct Node<'a> {
 }
 
 impl<'a> Node<'a> {
+    #[inline]
     fn prev(&self) -> &'a Node<'a> { self._prev.get() }
+    #[inline]
     fn next(&self) -> &'a Node<'a> { self._next.get() }
 
+    #[inline]
     fn prev_z(&self) -> Option<&'a Node<'a>> { self._prev_z.get() }
+    #[inline]
     fn next_z(&self) -> Option<&'a Node<'a>> { self._next_z.get() }
 
     // check whether a polygon node forms a valid ear with adjacent nodes
@@ -201,6 +207,7 @@ impl<'a> Node<'a> {
 }
 
 impl<'a> PartialEq for &'a Node<'a> {
+    #[inline]
     fn eq(&self, other: &&'a Node<'a>) -> bool {
         *self as *const _ == *other as *const _
     }
@@ -239,6 +246,7 @@ impl HashParameters {
     }
 
     // z-order of a point given coords and inverse of the longer side of data bbox
+    #[inline]
     fn z_order(&self, p: Point) -> i32 {
         // coords are transformed into non-negative 15-bit integer range
         let mut x = (32767. * (p.0 - self.min.0) * self.inv_size) as i32;
@@ -267,7 +275,9 @@ pub trait Pt {
 }
 
 impl<'a> Pt for &'a Point {
+    #[inline]
     fn x(&self) -> f64 { self.0 }
+    #[inline]
     fn y(&self) -> f64 { self.1 }
 }
 
@@ -669,6 +679,7 @@ fn sort_linked<'a>(list: &'a Node<'a>) {
 }
 
 // find the leftmost node of a polygon ring
+#[inline]
 fn get_leftmost<'a>(start: &'a Node<'a>) -> &'a Node<'a> {
     let mut p = start;
     let mut leftmost = start;
@@ -684,6 +695,7 @@ fn get_leftmost<'a>(start: &'a Node<'a>) -> &'a Node<'a> {
 }
 
 // check if a point lies within a convex triangle
+#[inline]
 fn point_in_triangle(Point(ax, ay): Point,
                      Point(bx, by): Point,
                      Point(cx, cy): Point,
@@ -694,17 +706,20 @@ fn point_in_triangle(Point(ax, ay): Point,
 }
 
 // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+#[inline]
 fn is_valid_diagonal<'a>(a: &'a Node<'a>, b: &'a Node<'a>) -> bool {
     a.next().i != b.i && a.prev().i != b.i && !intersects_polygon(a, b) &&
         locally_inside(a, b) && locally_inside(b, a) && middle_inside(a, b)
 }
 
 // signed area of a triangle
+#[inline]
 fn area(p: Point, q: Point, r: Point) -> f64 {
     (q.1 - p.1) * (r.0 - q.0) - (q.0 - p.0) * (r.1 - q.1)
 }
 
 // check if two segments intersect
+#[inline]
 fn intersects(p1: Point, q1: Point, p2: Point, q2: Point) -> bool {
     (p1 == q1 && p2 == q2) ||
     (p1 == q2 && p2 == q1) ||
@@ -728,6 +743,7 @@ fn intersects_polygon<'a>(a: &'a Node<'a>, b: &'a Node<'a>) -> bool {
 }
 
 // check if a polygon diagonal is locally inside the polygon
+#[inline]
 fn locally_inside<'a>(a: &'a Node<'a>, b: &'a Node<'a>) -> bool {
     if area(a.prev().p, a.p, a.next().p) < 0. {
         area(a.p, b.p, a.next().p) >= 0. && area(a.p, a.prev().p, b.p) >= 0.

@@ -139,21 +139,22 @@ function findHoleBridge(hole: Node, outerNode: Node): Node | null {
   // segment's endpoint with lesser x will be potential connection point
   do {
     let py  = p.y;
-    let pny = p.next.y;
+    let pn  = p.next;
+    let pny = pn.y;
     if (hy <= py && hy >= pny && pny != py) {
       let px  = p.x;
-      let pnx = p.next.x;
+      let pnx = pn.x;
       let x = px + (hy - py) * (pnx - px) / (pny - py);
       if (x <= hx && x > qx) {
         qx = x;
-        if (x == hx) {
+        if (qx == hx) {
           if (hy == py)  return p;
-          if (hy == pny) return p.next;
+          if (hy == pny) return pn;
         }
-        m = select<Node | null>(p, p.next, px < pnx);
+        m = select<Node | null>(p, pn, px < pnx);
       }
     }
-    p = p.next;
+    p = pn;
   } while (p !== outerNode);
 
   if (!m) return null;
@@ -197,7 +198,7 @@ function cureLocalIntersections(start: Node, triangles: u32[], dim: u32): Node {
   do {
     let a = <Node>p.prev;
     let n = <Node>p.next;
-    let b = <Node>p.next.next;
+    let b = <Node>n.next;
 
     if (
       a != b &&
@@ -228,8 +229,9 @@ function splitEarcut(start: Node, triangles: u32[], dim: u32, minX: f64, minY: f
   var a = start;
   do {
     let b = <Node>a.next.next;
+    let indexB = b.index;
     while (b !== a.prev) {
-      if (a.index !== b.index && isValidDiagonal(a, b)) {
+      if (a.index !== indexB && isValidDiagonal(a, b)) {
         // split the polygon in two by the diagonal
         let c = splitPolygon(a, b);
 
