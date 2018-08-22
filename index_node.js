@@ -14,7 +14,7 @@ const waterHuge = earcutJS.flatten(require('./test/fixtures/water-huge.json'));
 const deepEqual = require('assert').deepEqual;
 
 if (false) {
-    const {vertices, holes} = waterHuge;
+    const {vertices, holes} = dude;
 
     const verticesArray = Float64Array.from(vertices);
     const holesArray    = Uint32Array.from(holes);
@@ -30,9 +30,9 @@ if (false) {
 } else {
 
     const samples = {
-        // 'typical OSM building': building,
-        // 'dude shape': dude,
-        // 'complex OSM water': water,
+        //'typical OSM building': building,
+        'dude shape': dude,
+        'complex OSM water': water,
         'huge complex water': waterHuge,
     };
 

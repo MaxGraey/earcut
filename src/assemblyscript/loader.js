@@ -9,7 +9,7 @@ const compiled = new WebAssembly.Module(fs.readFileSync(
     path.resolve(__dirname, `../../build/${ DEBUG ? 'debug' : 'release' }/earcut.as.wasm`)
 ));
 
-const memory = new WebAssembly.Memory({initial: 10});
+const memory = new WebAssembly.Memory({initial: 1000});
 
 const imports = {
     env: {
