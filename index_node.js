@@ -30,10 +30,10 @@ if (false) {
 } else {
 
     const samples = {
-        //'typical OSM building': building,
-        'dude shape': dude,
-        // 'complex OSM water': water,
-        //'huge complex water': waterHuge,
+        // 'typical OSM building': building,
+        // 'dude shape': dude,
+        'complex OSM water': water,
+        // 'huge complex water': waterHuge,
     };
 
     for (const name in samples) {
