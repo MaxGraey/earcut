@@ -98,10 +98,10 @@ function eliminateHoles(data: f64[], holeIndices: u32[], outerNode: Node, dim: u
 
   for (let i = 0; i < holeLength; ++i) {
     start = unchecked(holeIndices[i]) * dim;
-    end   = i < holeLength - 1 ? unchecked(holeIndices[i + 1]) * dim : dataLength;
+    end   = select<u32>(unchecked(holeIndices[i + 1]) * dim, dataLength, i < holeLength - 1);
     list  = linkedList(data, start, end, dim);
 
-    if (list === list.next) list.steiner = true;
+    list.steiner = (list === list.next);
     queue[i] = unchecked(getLeftmost(list as Node));
   }
 
