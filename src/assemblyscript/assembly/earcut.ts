@@ -60,7 +60,9 @@ export function earcutCore(data: f64[], holeIndices: u32[], dim: u32 = 2): u32[]
     if (invSize != 0.0) invSize = 1.0 / invSize;
   }
 
-  var triangles: u32[] = [];
+  var triangles = new Array<u32>(3 * (data.length + holeIndices.length));
+  triangles.length = 0;
+
   earcutLinked(outerNode as Node, triangles, dim, minX, minY, invSize);
   return triangles;
 }
