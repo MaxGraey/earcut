@@ -1,7 +1,6 @@
 'use strict';
 const {
     earcut,
-    purge,
     getU32Array,
     newU32Array,
     newF64Array

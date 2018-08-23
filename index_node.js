@@ -26,14 +26,15 @@ if (false) {
     const triangles2 = earcutJS(verticesArray, holesArray);
 
     deepEqual(triangles1, triangles2);
+
     // console.log(triangles1);
 } else {
 
     const samples = {
         // 'typical OSM building': building,
-        // 'dude shape': dude,
+        'dude shape': dude,
         'complex OSM water': water,
-        // 'huge complex water': waterHuge,
+        'huge complex water': waterHuge,
     };
 
     for (const name in samples) {
@@ -47,11 +48,11 @@ if (false) {
             .add(`JS ${name} (${verticesCount} vertices):`, () => {
                 earcutJS(vertices, holes);
             })
-            .add(`AssemblyScript WASM ${name} (${verticesCount} vertices):`, () => {
-                earcutAsWasm(verticesArray, holesArray);
-            })
             .add(`Rust WASM ${name} (${verticesCount} vertices):`, () => {
                 earcutRustWasm(verticesArray, holesArray);
+            })
+            .add(`AssemblyScript WASM ${name} (${verticesCount} vertices):`, () => {
+                earcutAsWasm(verticesArray, holesArray);
             })
             .on('cycle', ({target}) => console.log(String(target)))
             .run();
