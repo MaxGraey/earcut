@@ -7,9 +7,10 @@ import("./earcut").then((module) => {
     const earcutRustWasm = module.earcut_flat;
 
     const samples = {
-        'typical OSM building': earcutJS.flatten(require('./test/fixtures/building.json')),
+        // 'typical OSM building': earcutJS.flatten(require('./test/fixtures/building.json')),
         'dude shape': earcutJS.flatten(require('./test/fixtures/dude.json')),
-        'complex OSM water': earcutJS.flatten(require('./test/fixtures/water.json'))
+        'complex OSM water': earcutJS.flatten(require('./test/fixtures/water.json')),
+        'complex OSM huge water': earcutJS.flatten(require('./test/fixtures/water-huge.json'))
     };
 
     const benchmark  = require('benchmark');
